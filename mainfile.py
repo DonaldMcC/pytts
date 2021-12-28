@@ -1,5 +1,12 @@
 # https://medium.com/pythoneers/10-handy-automation-scripts-you-should-try-using-python-fc9450116938
-# this will just implement the sketching approach and may then amend a bit
+# this merges the pdf and url approaches into a single file for now - I think maybe extending to process
+# a list of files of all types would be OK - word documents probably worth looking at as a format too
+# and probably also process from a folder if that's easier with archiving after processing - so I just keep
+# a list of bookmarks and the like and go with that - still no need for fancy interface perhaps and can run
+# with some defaults presumably as well - maybe that handles the input
+# output probably we do want some chunking options in the filename and generally we take the input name as basis
+# for the ouput I think
+# will also need to get the speed correct and part of the options
 #pytts test
 import pyttsx3
 import requests
@@ -7,7 +14,7 @@ import PyPDF2
 from bs4 import BeautifulSoup
 engine = pyttsx3.init('sapi5')
 voices = engine.getProperty('voices')
-newVoiceRate = 130                       ## Reduce The Speech Rate
+newVoiceRate = 200                       ## average speech is 150 wpm but I prefer a little faster
 engine.setProperty('rate',newVoiceRate)
 engine.setProperty('voice', voices[1].id)
 def speak(audio):
