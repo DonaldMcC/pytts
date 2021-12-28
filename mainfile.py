@@ -3,7 +3,7 @@
 #pytts test
 import pyttsx3
 import requests
-import pyPDF2
+import PyPDF2
 from bs4 import BeautifulSoup
 engine = pyttsx3.init('sapi5')
 voices = engine.getProperty('voices')
@@ -15,13 +15,25 @@ def speak(audio):
   engine.runAndWait()
 text = str(input("Paste article\n"))
 if text[-3:]=='pdf':
-    reader = pyPDF2.PdfFileReader(open('story.pdf','rb'))
-    for page_num in range(pdfreader.numpages):
-        text = pdfreader.getPage(page_num).extractText()
+    reader = PyPDF2.PdfFileReader(open(text,'rb'))
+    for page_num in range(reader.numPages):
+        text = reader.getPage(page_num).extractText()
         cleaned_text = text.strip().replace('\n',' ')  ## Removes unnecessary spaces and break lines
         #print(cleaned_text)                ## Print the text from PDF
         #engine.say(cleaned_text)        ## Let The Speaker Speak The Text
         engine.save_to_file(cleaned_text,'story.mp3')  ## Saving Text In a audio file 'story.mp3'
+        engine.runAndWait()
+elif text[-3:]=='txt':
+    with open(text) as fp:
+        line = fp.readline()
+        cnt=0
+        story=[]
+        while line:
+            print("Line {}: {}".format(cnt, line.strip()))
+            story.append(line.strip())
+            line = fp.readline()
+            cnt+=1
+        engine.save_to_file(story, 'story.mp3')  ## Saving Text In a audio file 'story.mp3'
         engine.runAndWait()
 else: #url
     res = requests.get(text)
