@@ -48,20 +48,23 @@ def save(text, dest='story.mp3'):
   engine.runAndWait()
 
 
-def callbytype(extension, source):
+def callbytype(extension, file, filename=None):
     if extension=='pdf':
-        readpdf(source)
+        readpdf(file)
     elif extension=='txt':
-        readtxt(source)
+        readtxt(file)
     elif extension=='url':
-        readurl(source)
+        readurl(file, filename)
     else:
         print('Extension '+ extension + ' is not supported yet')
 
 
 # below needs fixed for multiple pages
 def readpdf(file):
-    reader = PyPDF2.PdfFileReader(open(file,'rb'))
+    destname = file[:-3] + "mp3"
+    dest = os.path.join(dest_folder, destname)
+    source = os.path.join(source_folder, file)
+    reader = PyPDF2.PdfFileReader(open(source,'rb'))
     for page_num in range(reader.numPages):
         text = reader.getPage(page_num).extractText()
         cleaned_text = text.strip().replace('\n',' ')  ## Removes unnecessary spaces and break lines
@@ -70,7 +73,10 @@ def readpdf(file):
 
 
 def readtxt(file):
-    with open(file) as fp:
+    destname = file[:-3] + "mp3"
+    dest = os.path.join(dest_folder, destname)
+    source = os.path.join(source_folder, file)
+    with open(source) as fp:
         line = fp.readline()
         cnt=0
         story=[]
@@ -82,11 +88,11 @@ def readtxt(file):
         save(story, dest)
 
 
-def readurl(file):
+def readurl(file, filename):
     #These are assumed to be short so no file_splitting
-    res = requests.get(text)
+    res = requests.get(file)
     soup = BeautifulSoup(res.text,'html.parser')
-    destname = file[:-3] + "mp3"
+    destname = filename + ".mp3"
     dest = os.path.join(dest_folder, destname)
     articles = []
     for i in range(len(soup.select('.p'))):
@@ -95,17 +101,20 @@ def readurl(file):
     text = " ".join(articles)
     save(text, dest)
 
-
-f = list_files(source)
+#TODO - possibly support friendly names in url layout I guess
+f = list_files(source_folder)
 for file in f:
-    with open(os.path.join(source, file)) as textfile:
         extension=file[-3:]
         if extension == 'url':
-            with open(file) as fp:
+            sourcelist = os.path.join(source_folder, file)
+            with open(sourcelist) as fp:
                 line = fp.readline()
+                filecount=0
                 while line:
-                    callbytype('url', line)
+                    filename = "url" + str(filecount)
+                    callbytype('url', line, filename)
                     line = fp.readline()
+                    filecount+=1
         else:
             callbytype(extension, file)
 engine.stop()
