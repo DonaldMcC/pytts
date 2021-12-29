@@ -1,9 +1,11 @@
+#!/usr/bin/env python3
 # https://medium.com/pythoneers/10-handy-automation-scripts-you-should-try-using-python-fc9450116938
-# this merges the pdf and url approaches into a single file for now - I think maybe extending to process
-# a list of files of all types would be OK - word documents probably worth looking at as a format too
-# and probably also process from a folder if that's easier with archiving after processing - so I just keep
-# a list of bookmarks and the like and go with that - still no need for fancy interface perhaps and can run
-# with some defaults presumably as well - maybe that handles the input
+# this will now handle 3 things
+# txt files in the import folder
+# pdf files in the import folder
+# a text file consisting of urls provided it has an extension of .url
+# there should now be no actual input the program just runs
+# word documents probably worth looking at as a format too
 # output probably we do want some chunking options in the filename and generally we take the input name as basis
 # for the ouput I think
 # will also need to get the speed correct and part of the options
@@ -12,26 +14,69 @@ import pyttsx3
 import requests
 import PyPDF2
 from bs4 import BeautifulSoup
-engine = pyttsx3.init('sapi5')
+import os
+source = r'c:\users\donal\Documents\ttsimport'
+dest = r'c:\users\donal\Documents\ttsexport'
+
+engine = pyttsx3.init('sapi5')  #This would need to change for non-windows as sapi is win only
 voices = engine.getProperty('voices')
 newVoiceRate = 200                       ## average speech is 150 wpm but I prefer a little faster
 engine.setProperty('rate',newVoiceRate)
 engine.setProperty('voice', voices[1].id)
+
+#we will look to process all files in import directory
+def list_files(directory, extension=None):
+    if extension:
+        return (f for f in os.listdir(directory) if f.endswith('.' + extension))
+    else:
+        return (f for f in os.listdir(directory))
+
+
 def speak(audio):
   engine.say(audio)
   engine.runAndWait()
-text = str(input("Paste article\n"))
-if text[-3:]=='pdf':
-    reader = PyPDF2.PdfFileReader(open(text,'rb'))
+
+
+def save(text, dest='story.mp3'):
+  engine.save_to_file(text, dest)  ## Saving Text In a audio file default is 'story.mp3'
+  engine.runAndWait()
+
+
+f = list_files(source)
+for file in f:
+    with open(os.path.join(source,file)) as textfile:
+        extension=file[-3:]
+        if extension == 'url':
+            pass
+            #lines = textfile.readlines()
+        else:
+            callbytype(extension, sourcefile, destfile)
+engine.stop()
+
+
+def callbytype(extension, sourcefile, destfile):
+    if extension=='pdf':
+        readpdf(source, dest)
+    elif extension=='txt':
+        readtxt(source, dest)
+    elif extension=='url':
+        readurl(source, dest)
+    else:
+        print('Extension '+ extension + ' is not supported yet')
+
+
+# below needs fixed for multiple pages
+def readpdf(file, dest):
+    reader = PyPDF2.PdfFileReader(open(file,'rb'))
     for page_num in range(reader.numPages):
         text = reader.getPage(page_num).extractText()
         cleaned_text = text.strip().replace('\n',' ')  ## Removes unnecessary spaces and break lines
-        #print(cleaned_text)                ## Print the text from PDF
-        #engine.say(cleaned_text)        ## Let The Speaker Speak The Text
-        engine.save_to_file(cleaned_text,'story.mp3')  ## Saving Text In a audio file 'story.mp3'
-        engine.runAndWait()
-elif text[-3:]=='txt':
-    with open(text) as fp:
+        save(cleaned_text,dest)
+    return
+
+
+def readtxt(file, dest):
+    with open(file) as fp:
         line = fp.readline()
         cnt=0
         story=[]
@@ -40,9 +85,10 @@ elif text[-3:]=='txt':
             story.append(line.strip())
             line = fp.readline()
             cnt+=1
-        engine.save_to_file(story, 'story.mp3')  ## Saving Text In a audio file 'story.mp3'
-        engine.runAndWait()
-else: #url
+        save(story, dest)
+
+
+def readurl(file, dest)
     res = requests.get(text)
     soup = BeautifulSoup(res.text,'html.parser')
     articles = []
@@ -50,15 +96,4 @@ else: #url
         article = soup.select('.p')[i].getText().strip()
         articles.append(article)
     text = " ".join(articles)
-
-    #speak(text)
-    engine.save_to_file(text, 'test.mp3') ## If you want to save the speech as a audio file
-    engine.runAndWait()
-
-
-engine.stop()
-
-''' 
-Link To Try The Script
-https://medium.com/@garyvee/a-message-for-those-feeling-lost-in-their-20s-278a878baac2
-'''
+    save(text, dest)
