@@ -9,12 +9,14 @@
 # output probably we do want some chunking options in the filename and generally we take the input name as basis
 # for the ouput I think
 # will also need to get the speed correct and part of the options
-#pytts test
+# mp4 to mp3 from https://stackoverflow.com/questions/55081352/how-to-convert-mp4-to-mp3-using-python
+
 import pyttsx3
 import requests
 import PyPDF2
 from bs4 import BeautifulSoup
 import os
+
 
 #SETUP DATA - amend for your use
 source_folder = r'c:\users\donal\Documents\ttsimport'  # where you put files to be converted
@@ -48,6 +50,17 @@ def save(text, dest='story.mp3'):
   engine.runAndWait()
 
 
+from moviepy.editor import *
+def mp4_to_mp3(file):
+    # function call mp4_to_mp3("my_mp4_path.mp4", "audio.mp3")
+    destname = file[:-3] + "mp3"
+    mp3 = os.path.join(dest_folder, destname)
+    mp4 = os.path.join(source_folder, file)
+    mp4_without_frames = AudioFileClip(mp4)
+    mp4_without_frames.write_audiofile(mp3)
+    mp4_without_frames.close()
+
+
 def callbytype(extension, file, filename=None):
     if extension=='pdf':
         readpdf(file)
@@ -55,6 +68,8 @@ def callbytype(extension, file, filename=None):
         readtxt(file)
     elif extension=='url':
         readurl(file, filename)
+    elif extension=='mp4':
+        mp4_to_mp3(file)
     else:
         print('Extension '+ extension + ' is not supported yet')
 
