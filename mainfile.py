@@ -16,12 +16,12 @@ import requests
 import PyPDF2
 from bs4 import BeautifulSoup
 import os
-
+import shutil
 
 #SETUP DATA - amend for your use
 source_folder = r'c:\users\donal\Documents\ttsimport'  # where you put files to be converted
 dest_folder = r'c:\users\donal\Documents\ttsexport' # where you create converted files
-
+archive_folder =  r'c:\users\donal\Documents\ttsarchive'
 #Not using these yet - lets see if we need to
 #lines_per_file=10  #number of lines in text or html file before creating new file
 #pages_per_file=1  #number of pages in pdf file before creating new file
@@ -72,6 +72,7 @@ def callbytype(extension, file, filename=None):
         mp4_to_mp3(file)
     else:
         print('Extension '+ extension + ' is not supported yet')
+    return
 
 
 # below needs fixed for multiple pages
@@ -101,7 +102,7 @@ def readtxt(file):
             line = fp.readline()
             cnt+=1
         save(story, dest)
-
+    return
 
 def readurl(file, filename):
     #These are assumed to be short so no file_splitting
@@ -115,22 +116,27 @@ def readurl(file, filename):
         articles.append(article)
     text = " ".join(articles)
     save(text, dest)
+    return
+
 
 #TODO - possibly support friendly names in url layout I guess
 f = list_files(source_folder)
 for file in f:
-        extension=file[-3:]
-        if extension == 'url':
-            sourcelist = os.path.join(source_folder, file)
-            with open(sourcelist) as fp:
+    extension=file[-3:]
+    sourcelist = os.path.join(source_folder, file)
+    archivefile = os.path.join(archive_folder, file)
+    if extension == 'url':
+        with open(sourcelist) as fp:
+            line = fp.readline()
+            filecount=0
+            while line:
+                filename = "url" + str(filecount)
+                callbytype('url', line, filename)
                 line = fp.readline()
-                filecount=0
-                while line:
-                    filename = "url" + str(filecount)
-                    callbytype('url', line, filename)
-                    line = fp.readline()
-                    filecount+=1
-        else:
-            callbytype(extension, file)
+                filecount+=1
+    else:
+        callbytype(extension, file)
+    shutil.move(sourcelist, archivefile)
+
 engine.stop()
 
