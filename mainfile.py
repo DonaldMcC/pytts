@@ -15,7 +15,6 @@ import pyttsx3
 import requests
 import PyPDF2
 from bs4 import BeautifulSoup
-import os
 import shutil
 
 #SETUP DATA - amend for your use
@@ -25,6 +24,7 @@ archive_folder =  r'c:\users\donal\Documents\ttsarchive'
 #Not using these yet - lets see if we need to
 #lines_per_file=10  #number of lines in text or html file before creating new file
 #pages_per_file=1  #number of pages in pdf file before creating new file
+#TODO - may include word files - seems there is a pydocx module for this
 
 engine = pyttsx3.init('sapi5')  #This would need to change for non-windows as sapi is win only
 voices = engine.getProperty('voices')
@@ -62,17 +62,18 @@ def mp4_to_mp3(file):
 
 
 def callbytype(extension, file, filename=None):
-    if extension=='pdf':
-        readpdf(file)
-    elif extension=='txt':
-        readtxt(file)
-    elif extension=='url':
-        readurl(file, filename)
-    elif extension=='mp4':
-        mp4_to_mp3(file)
+    if extension=='.pdf':
+        result=readpdf(file)
+    elif extension=='.txt':
+        result=readtxt(file)
+    elif extension=='.url':
+        result=readurl(file, filename)
+    elif extension=='.mp4':
+        result=mp4_to_mp3(file)
     else:
         print('Extension '+ extension + ' is not supported yet')
-    return
+        result=False
+    return result
 
 
 # below needs fixed for multiple pages
@@ -122,21 +123,22 @@ def readurl(file, filename):
 #TODO - possibly support friendly names in url layout I guess
 f = list_files(source_folder)
 for file in f:
-    extension=file[-3:]
+    extension=os.path.splitext(file)[1]
     sourcelist = os.path.join(source_folder, file)
     archivefile = os.path.join(archive_folder, file)
-    if extension == 'url':
+    if extension == '.url':
         with open(sourcelist) as fp:
             line = fp.readline()
             filecount=0
             while line:
-                filename = "url" + str(filecount)
-                callbytype('url', line, filename)
+                filename = ".url" + str(filecount)
+                callbytype('.url', line, filename)
                 line = fp.readline()
                 filecount+=1
     else:
-        callbytype(extension, file)
-    shutil.move(sourcelist, archivefile)
+        result=callbytype(extension, file)
+    if result:
+        shutil.move(sourcelist, archivefile)
 
 engine.stop()
 
