@@ -25,6 +25,7 @@ archive_folder =  r'c:\users\donal\Documents\ttsarchive'
 #lines_per_file=10  #number of lines in text or html file before creating new file
 #pages_per_file=1  #number of pages in pdf file before creating new file
 #TODO - may include word files - seems there is a pydocx module for this
+#TODO - probably want to populate Album and Artist metadata in the output file
 
 engine = pyttsx3.init('sapi5')  #This would need to change for non-windows as sapi is win only
 voices = engine.getProperty('voices')
@@ -59,7 +60,7 @@ def mp4_to_mp3(file):
     mp4_without_frames = AudioFileClip(mp4)
     mp4_without_frames.write_audiofile(mp3)
     mp4_without_frames.close()
-
+    return True
 
 def callbytype(extension, file, filename=None):
     if extension=='.pdf':
@@ -86,14 +87,14 @@ def readpdf(file):
         text = reader.getPage(page_num).extractText()
         cleaned_text = text.strip().replace('\n',' ')  ## Removes unnecessary spaces and break lines
         save(cleaned_text, dest)
-    return
+    return True
 
 
 def readtxt(file):
     destname = file[:-3] + "mp3"
     dest = os.path.join(dest_folder, destname)
     source = os.path.join(source_folder, file)
-    with open(source) as fp:
+    with open(source, errors='ignore') as fp:
         line = fp.readline()
         cnt=0
         story=[]
@@ -103,7 +104,8 @@ def readtxt(file):
             line = fp.readline()
             cnt+=1
         save(story, dest)
-    return
+    return True
+
 
 def readurl(file, filename):
     #These are assumed to be short so no file_splitting
@@ -117,7 +119,7 @@ def readurl(file, filename):
         articles.append(article)
     text = " ".join(articles)
     save(text, dest)
-    return
+    return True
 
 
 #TODO - possibly support friendly names in url layout I guess
