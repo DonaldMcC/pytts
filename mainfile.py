@@ -38,7 +38,7 @@ engine.setProperty('voice', voices[1].id)
 
 # we will look to process all files in import directory
 def list_files(directory, ext=None):
-    if extension:
+    if ext:
         return (fil for fil in os.listdir(directory) if fil.endswith('.' + ext))
     else:
         return (fil for fil in os.listdir(directory))
@@ -94,6 +94,9 @@ def readpdf(fil):
 
 
 def readtxt(fil):
+    #This works OK with ansi text - but getting lots of Euro symbol and other stuff from
+    #apostrophes without this step when copied and pasted from website
+    #will need to deal with this somewhere somehow
     destname = file[:-3] + "mp3"
     dest = os.path.join(dest_folder, destname)
     source = os.path.join(source_folder, fil)
