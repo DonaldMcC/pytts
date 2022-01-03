@@ -16,102 +16,105 @@ import requests
 import PyPDF2
 from bs4 import BeautifulSoup
 import shutil
+from moviepy.editor import *
 
-#SETUP DATA - amend for your use
+
+# SETUP DATA - amend for your use
 source_folder = r'c:\users\donal\Documents\ttsimport'  # where you put files to be converted
-dest_folder = r'c:\users\donal\Documents\ttsexport' # where you create converted files
-archive_folder =  r'c:\users\donal\Documents\ttsarchive'
-#Not using these yet - lets see if we need to
-#lines_per_file=10  #number of lines in text or html file before creating new file
-#pages_per_file=1  #number of pages in pdf file before creating new file
-#TODO - may include word files - seems there is a pydocx module for this
-#TODO - probably want to populate Album and Artist metadata in the output file
+dest_folder = r'c:\users\donal\Documents\ttsexport'  # where you create converted files
+archive_folder = r'c:\users\donal\Documents\ttsarchive'
+# Not using these yet - lets see if we need to
+# lines_per_file=10  #number of lines in text or html file before creating new file
+# pages_per_file=1  #number of pages in pdf file before creating new file
+# TODO - may include word files - seems there is a pydocx module for this
+# TODO - probably want to populate Album and Artist metadata in the output file
 
-engine = pyttsx3.init('sapi5')  #This would need to change for non-windows as sapi is win only
+engine = pyttsx3.init('sapi5')  # This would need to change for non-windows as sapi is win only
 voices = engine.getProperty('voices')
-newVoiceRate = 200                       ## average speech is 150 wpm but I prefer a little faster
-engine.setProperty('rate',newVoiceRate)
+newVoiceRate = 200  # average speech is 150 wpm but I prefer a little faster
+engine.setProperty('rate', newVoiceRate)
 engine.setProperty('voice', voices[1].id)
 
-#we will look to process all files in import directory
-def list_files(directory, extension=None):
+
+# we will look to process all files in import directory
+def list_files(directory, ext=None):
     if extension:
-        return (f for f in os.listdir(directory) if f.endswith('.' + extension))
+        return (fil for fil in os.listdir(directory) if fil.endswith('.' + ext))
     else:
-        return (f for f in os.listdir(directory))
+        return (fil for fil in os.listdir(directory))
 
 
 def speak(audio):
-  engine.say(audio)
-  engine.runAndWait()
+    engine.say(audio)
+    engine.runAndWait()
 
 
 def save(text, dest='story.mp3'):
-  engine.save_to_file(text, dest)  ## Saving Text In a audio file default is 'story.mp3'
-  engine.runAndWait()
+    engine.save_to_file(text, dest)  # Saving Text In a audio file default is 'story.mp3'
+    engine.runAndWait()
 
 
-from moviepy.editor import *
-def mp4_to_mp3(file):
+def mp4_to_mp3(fil):
     # function call mp4_to_mp3("my_mp4_path.mp4", "audio.mp3")
     destname = file[:-3] + "mp3"
     mp3 = os.path.join(dest_folder, destname)
-    mp4 = os.path.join(source_folder, file)
+    mp4 = os.path.join(source_folder, fil)
     mp4_without_frames = AudioFileClip(mp4)
     mp4_without_frames.write_audiofile(mp3)
     mp4_without_frames.close()
     return True
 
-def callbytype(extension, file, filename=None):
-    if extension=='.pdf':
-        result=readpdf(file)
-    elif extension=='.txt':
-        result=readtxt(file)
-    elif extension=='.url':
-        result=readurl(file, filename)
-    elif extension=='.mp4':
-        result=mp4_to_mp3(file)
+
+def callbytype(ext, file, filename=None):
+    if ext == '.pdf':
+        result = readpdf(file)
+    elif ext == '.txt':
+        result = readtxt(file)
+    elif ext == '.url':
+        result = readurl(file, filename)
+    elif ext == '.mp4':
+        result = mp4_to_mp3(file)
     else:
-        print('Extension '+ extension + ' is not supported yet')
-        result=False
+        print('Extension ' + ext + ' is not supported yet')
+        result = False
     return result
 
 
 # below needs fixed for multiple pages
-def readpdf(file):
+def readpdf(fil):
     destname = file[:-3] + "mp3"
     dest = os.path.join(dest_folder, destname)
-    source = os.path.join(source_folder, file)
-    reader = PyPDF2.PdfFileReader(open(source,'rb'))
+    source = os.path.join(source_folder, fil)
+    reader = PyPDF2.PdfFileReader(open(source, 'rb'))
     for page_num in range(reader.numPages):
         text = reader.getPage(page_num).extractText()
-        cleaned_text = text.strip().replace('\n',' ')  ## Removes unnecessary spaces and break lines
+        cleaned_text = text.strip().replace('\n', ' ')  # Removes unnecessary spaces and break lines
         save(cleaned_text, dest)
     return True
 
 
-def readtxt(file):
+def readtxt(fil):
     destname = file[:-3] + "mp3"
     dest = os.path.join(dest_folder, destname)
-    source = os.path.join(source_folder, file)
+    source = os.path.join(source_folder, fil)
     with open(source, errors='ignore') as fp:
         line = fp.readline()
-        cnt=0
-        story=[]
+        cnt = 0
+        story = []
         while line:
             print("Line {}: {}".format(cnt, line.strip()))
             story.append(line.strip())
             line = fp.readline()
-            cnt+=1
+            cnt += 1
         save(story, dest)
     return True
 
 
-def readurl(file, filename):
-    #These are assumed to be short so no file_splitting
-    res = requests.get(file)
-    soup = BeautifulSoup(res.text,'html.parser')
-    destname = filename + ".mp3"
+def readurl(fil, filenam):
+    # These are assumed to be short so no file_splitting
+    res = requests.get(fil)
+    soup = BeautifulSoup(res.text, 'html.parser')
+    destname = filenam + ".mp3"
     dest = os.path.join(dest_folder, destname)
     articles = []
     for i in range(len(soup.select('.p'))):
@@ -122,25 +125,25 @@ def readurl(file, filename):
     return True
 
 
-#TODO - possibly support friendly names in url layout I guess
+# TODO - possibly support friendly names in url layout I guess
 f = list_files(source_folder)
 for file in f:
-    extension=os.path.splitext(file)[1]
+    extension = os.path.splitext(file)[1]
     sourcelist = os.path.join(source_folder, file)
     archivefile = os.path.join(archive_folder, file)
+    result = False
     if extension == '.url':
         with open(sourcelist) as fp:
             line = fp.readline()
-            filecount=0
+            filecount = 0
             while line:
                 filename = ".url" + str(filecount)
-                callbytype('.url', line, filename)
+                result = callbytype('.url', line, filename)
                 line = fp.readline()
-                filecount+=1
+                filecount += 1
     else:
-        result=callbytype(extension, file)
+        result = callbytype(extension, file)
     if result:
         shutil.move(sourcelist, archivefile)
 
 engine.stop()
-
