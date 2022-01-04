@@ -18,6 +18,12 @@ from bs4 import BeautifulSoup
 import shutil
 from moviepy.editor import *
 
+import docx
+from docx.document import Document
+from docx.oxml.table import CT_Tbl
+from docx.oxml.text.paragraph import CT_P
+from docx.table import _Cell, Table
+from docx.text.paragraph import Paragraph
 
 # SETUP DATA - amend for your use
 source_folder = r'c:\users\donal\Documents\ttsimport'  # where you put files to be converted
@@ -26,7 +32,6 @@ archive_folder = r'c:\users\donal\Documents\ttsarchive'
 # Not using these yet - lets see if we need to
 # lines_per_file=10  #number of lines in text or html file before creating new file
 # pages_per_file=1  #number of pages in pdf file before creating new file
-# TODO - may include word files - seems there is a pydocx module for this
 # TODO - probably want to populate Album and Artist metadata in the output file
 
 engine = pyttsx3.init('sapi5')  # This would need to change for non-windows as sapi is win only
@@ -34,6 +39,27 @@ voices = engine.getProperty('voices')
 newVoiceRate = 200  # average speech is 150 wpm but I prefer a little faster
 engine.setProperty('rate', newVoiceRate)
 engine.setProperty('voice', voices[1].id)
+
+
+def iter_block_items(parent):
+    if isinstance(parent, Document):
+        parent_elm = parent.element.body
+    elif isinstance(parent, _Cell):
+        parent_elm = parent._tc
+    else:
+        raise ValueError("something's not right")
+
+    for child in parent_elm.iterchildren():
+        if isinstance(child, CT_P):
+            yield Paragraph(child, parent)
+        elif isinstance(child, CT_Tbl):
+            # yeild paragraphs from table cells
+            # Note, it works for single level table (not nested tables)
+            table = Table(child, parent)
+            for row in table.rows:
+                for cell in row.cells:
+                    for paragraph in cell.paragraphs:
+                        yield paragraph
 
 
 # we will look to process all files in import directory
@@ -56,7 +82,7 @@ def save(text, dest='story.mp3'):
 
 def mp4_to_mp3(fil):
     # function call mp4_to_mp3("my_mp4_path.mp4", "audio.mp3")
-    destname = file[:-3] + "mp3"
+    destname = fil[:-3] + "mp3"
     mp3 = os.path.join(dest_folder, destname)
     mp4 = os.path.join(source_folder, fil)
     mp4_without_frames = AudioFileClip(mp4)
@@ -65,24 +91,9 @@ def mp4_to_mp3(fil):
     return True
 
 
-def callbytype(ext, file, filename=None):
-    if ext == '.pdf':
-        result = readpdf(file)
-    elif ext == '.txt':
-        result = readtxt(file)
-    elif ext == '.url':
-        result = readurl(file, filename)
-    elif ext == '.mp4':
-        result = mp4_to_mp3(file)
-    else:
-        print('Extension ' + ext + ' is not supported yet')
-        result = False
-    return result
-
-
 # below needs fixed for multiple pages
 def readpdf(fil):
-    destname = file[:-3] + "mp3"
+    destname = fil[:-3] + "mp3"
     dest = os.path.join(dest_folder, destname)
     source = os.path.join(source_folder, fil)
     reader = PyPDF2.PdfFileReader(open(source, 'rb'))
@@ -126,6 +137,38 @@ def readurl(fil, filenam):
     text = " ".join(articles)
     save(text, dest)
     return True
+
+
+def word_to_mp3(fil):
+    source = os.path.join(source_folder, fil)
+    destname = fil[:-4] + "mp3"
+    dest = os.path.join(dest_folder, destname)
+    articles = []
+    doc = docx.Document(source)
+    for block in iter_block_items(doc):
+        print(block.text)
+        articles.append(block.text)
+    text = " ".join(articles)
+    print(text)
+    save(text, dest)
+    return True
+
+
+def callbytype(ext, fil, filenam=None):
+    if ext == '.pdf':
+        result = readpdf(fil)
+    elif ext == '.txt':
+        result = readtxt(fil)
+    elif ext == '.url':
+        result = readurl(fil, filenam)
+    elif ext == '.mp4':
+        result = mp4_to_mp3(fil)
+    elif ext == '.docx':
+        result = word_to_mp3(fil)
+    else:
+        print('Extension ' + ext + ' is not supported yet')
+        result = False
+    return result
 
 
 # TODO - possibly support friendly names in url layout I guess
