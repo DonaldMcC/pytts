@@ -128,6 +128,7 @@ def readurl(fil, filenam):
     # These are assumed to be short so no file_splitting
     res = requests.get(fil)
     soup = BeautifulSoup(res.text, 'html.parser')
+    print(res.text)
     destname = filenam + ".mp3"
     dest = os.path.join(dest_folder, destname)
     articles = []
@@ -135,8 +136,9 @@ def readurl(fil, filenam):
         article = soup.select('.p')[i].getText().strip()
         articles.append(article)
     text = " ".join(articles)
+    print(text)
     save(text, dest)
-    return True
+    return False
 
 
 def word_to_mp3(fil):
@@ -183,7 +185,8 @@ for file in f:
             line = fp.readline()
             filecount = 0
             while line:
-                filename = ".url" + str(filecount)
+                print(line)
+                filename = "url" + str(filecount)
                 result = callbytype('.url', line, filename)
                 line = fp.readline()
                 filecount += 1
