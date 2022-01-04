@@ -104,6 +104,10 @@ def readpdf(fil):
     return True
 
 
+def remove_non_ascii(s):
+    return "".join(c for c in s if ord(c)<128)
+
+
 def readtxt(fil):
     #This works OK with ansi text - but getting lots of Euro symbol and other stuff from
     #apostrophes without this step when copied and pasted from website
@@ -116,8 +120,7 @@ def readtxt(fil):
         cnt = 0
         story = []
         while line:
-            print("Line {}: {}".format(cnt, line.strip()))
-            story.append(line.strip())
+            story.append(remove_non_ascii(line))
             line = fp.readline()
             cnt += 1
         save(story, dest)
