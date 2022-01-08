@@ -63,7 +63,7 @@ def iter_block_items(parent):
 
 
 # we will look to process all files in import directory
-def list_files(directory, ext=None):
+def list_files(directory: str, ext=None):
     if ext:
         return (fil for fil in os.listdir(directory) if fil.endswith('.' + ext))
     else:
@@ -75,12 +75,12 @@ def speak(audio):
     engine.runAndWait()
 
 
-def save(text, dest='story.mp3'):
+def save(text: str, dest='story.mp3'):
     engine.save_to_file(text, dest)  # Saving Text In a audio file default is 'story.mp3'
     engine.runAndWait()
 
 
-def mp4_to_mp3(fil):
+def mp4_to_mp3(fil: str):
     # function call mp4_to_mp3("my_mp4_path.mp4", "audio.mp3")
     destname = fil[:-3] + "mp3"
     mp3 = os.path.join(dest_folder, destname)
@@ -92,7 +92,7 @@ def mp4_to_mp3(fil):
 
 
 # below needs fixed for multiple pages
-def readpdf(fil):
+def readpdf(fil: str):
     destname = fil[:-3] + "mp3"
     dest = os.path.join(dest_folder, destname)
     source = os.path.join(source_folder, fil)
@@ -108,11 +108,9 @@ def remove_non_ascii(s):
     return "".join(c for c in s if ord(c)<128)
 
 
-def readtxt(fil):
-    #This works OK with ansi text - but getting lots of Euro symbol and other stuff from
-    #apostrophes without this step when copied and pasted from website
-    #will need to deal with this somewhere somehow
-    destname = file[:-3] + "mp3"
+def readtxt(fil: str):
+    #This works OK with ansi text - now added remove non ascii to clean up
+    destname = fil[:-3] + "mp3"
     dest = os.path.join(dest_folder, destname)
     source = os.path.join(source_folder, fil)
     with open(source, errors='ignore') as fp:
