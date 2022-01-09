@@ -75,9 +75,28 @@ def speak(audio):
     engine.runAndWait()
 
 
-def save(text: str, dest='story.mp3'):
+def savechunk(text: str, dest: str):
     engine.save_to_file(text, dest)  # Saving Text In a audio file default is 'story.mp3'
     engine.runAndWait()
+
+
+def save(text: str, dest='story.mp3', chunksize=5000):
+    if len(text) <= chunksize:
+        savechunk(text, dest)
+        return
+    part = 1
+    while len(text) > chunksize:
+        txtpart = "_pt" + str(part)
+        split = text.find(". ", chunksize) + 1
+        newdest = dest[:-4] + txtpart + ".mp3"
+        if not split:
+            savechunk(text, newdest)
+            break
+        else:
+            part += 1
+            savechunk(text[:split], newdest)
+            text = text[split:]
+    return
 
 
 def mp4_to_mp3(fil: str):
@@ -109,7 +128,7 @@ def remove_non_ascii(s):
 
 
 def readtxt(fil: str):
-    #This works OK with ansi text - now added remove non ascii to clean up
+    # This works OK with ansi text - now added remove non ascii to clean up
     destname = fil[:-3] + "mp3"
     dest = os.path.join(dest_folder, destname)
     source = os.path.join(source_folder, fil)
@@ -118,10 +137,12 @@ def readtxt(fil: str):
         cnt = 0
         story = []
         while line:
-            story.append(remove_non_ascii(line))
+            if len(line) > 1:  # getting a lot of backslash n read out so added simple length filter
+                story.append(remove_non_ascii(line.rstrip("\n")))
+                cnt += 1
             line = fp.readline()
-            cnt += 1
-        save(story, dest)
+        storytext = ''.join(story)
+        save(storytext, dest)
     return True
 
 
@@ -137,7 +158,6 @@ def readurl(fil, filenam):
         article = soup.select('.p')[i].getText().strip()
         articles.append(article)
     text = " ".join(articles)
-    print(text)
     save(text, dest)
     return False
 
@@ -152,7 +172,6 @@ def word_to_mp3(fil):
         print(block.text)
         articles.append(block.text)
     text = " ".join(articles)
-    print(text)
     save(text, dest)
     return True
 
@@ -186,7 +205,6 @@ for file in f:
             line = fp.readline()
             filecount = 0
             while line:
-                print(line)
                 filename = "url" + str(filecount)
                 result = callbytype('.url', line, filename)
                 line = fp.readline()
