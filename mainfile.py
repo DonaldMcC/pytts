@@ -80,7 +80,7 @@ def savechunk(text: str, dest: str):
     engine.runAndWait()
 
 
-def save(text: str, dest='story.mp3', chunksize=5000):
+def save(text: str, dest='story.mp3', chunksize=20000):
     if len(text) <= chunksize:
         savechunk(text, dest)
         return
@@ -123,11 +123,11 @@ def readpdf(fil: str):
     return True
 
 
-def remove_non_ascii(s):
+def remove_non_ascii(s: str) ->str:
     return "".join(c for c in s if ord(c)<128)
 
 
-def readtxt(fil: str):
+def readtxt(fil: str) ->bool:
     # This works OK with ansi text - now added remove non ascii to clean up
     destname = fil[:-3] + "mp3"
     dest = os.path.join(dest_folder, destname)
@@ -146,7 +146,7 @@ def readtxt(fil: str):
     return True
 
 
-def readurl(fil, filenam):
+def readurl(fil: str, filenam: str) ->bool:
     # These are assumed to be short so no file_splitting
     res = requests.get(fil)
     soup = BeautifulSoup(res.text, 'html.parser')
@@ -162,7 +162,7 @@ def readurl(fil, filenam):
     return False
 
 
-def word_to_mp3(fil):
+def word_to_mp3(fil: str) ->bool:
     source = os.path.join(source_folder, fil)
     destname = fil[:-4] + "mp3"
     dest = os.path.join(dest_folder, destname)
