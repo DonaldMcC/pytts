@@ -24,6 +24,7 @@ from docx.oxml.table import CT_Tbl
 from docx.oxml.text.paragraph import CT_P
 from docx.table import _Cell, Table
 from docx.text.paragraph import Paragraph
+from m3_meta import set_tags
 
 # SETUP DATA - amend for your use
 source_folder = r'c:\users\donal\Documents\ttsimport'  # where you put files to be converted
@@ -32,7 +33,12 @@ archive_folder = r'c:\users\donal\Documents\ttsarchive'
 # Not using these yet - lets see if we need to
 # lines_per_file=10  #number of lines in text or html file before creating new file
 # pages_per_file=1  #number of pages in pdf file before creating new file
+# so think we use mutagen to set album and artst - but need some rules for this
 # TODO - probably want to populate Album and Artist metadata in the output file
+#https://stackoverflow.com/questions/18369188/python-add-id3-tags-to-mp3-file-that-has- no-tags
+#https://methodmatters.github.io/editing-id3-tags-mp3-meta-data-in-python/
+
+
 
 engine = pyttsx3.init('sapi5')  # This would need to change for non-windows as sapi is win only
 voices = engine.getProperty('voices')
@@ -78,6 +84,8 @@ def speak(audio):
 def savechunk(text: str, dest: str):
     engine.save_to_file(text, dest)  # Saving Text In a audio file default is 'story.mp3'
     engine.runAndWait()
+    set_tags(dest)
+    return
 
 
 def save(text: str, dest='story.mp3', chunksize=20000):
@@ -110,7 +118,6 @@ def mp4_to_mp3(fil: str):
     return True
 
 
-# below needs fixed for multiple pages
 def readpdf(fil: str):
     destname = fil[:-3] + "mp3"
     dest = os.path.join(dest_folder, destname)
