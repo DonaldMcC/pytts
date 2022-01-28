@@ -30,14 +30,18 @@ from m3_meta import set_tags
 source_folder = r'c:\users\donal\Documents\ttsimport'  # where you put files to be converted
 dest_folder = r'c:\users\donal\Documents\ttsexport'  # where you create converted files
 archive_folder = r'c:\users\donal\Documents\ttsarchive'
+recordings_folder = r'c:\users\donal\Documents\Sound Recordings'
+
+artist='current book'
+album='my album'
+
 # Not using these yet - lets see if we need to
 # lines_per_file=10  #number of lines in text or html file before creating new file
 # pages_per_file=1  #number of pages in pdf file before creating new file
 # so think we use mutagen to set album and artst - but need some rules for this
-# TODO - probably want to populate Album and Artist metadata in the output file
-#https://stackoverflow.com/questions/18369188/python-add-id3-tags-to-mp3-file-that-has- no-tags
-#https://methodmatters.github.io/editing-id3-tags-mp3-meta-data-in-python/
 
+# https://stackoverflow.com/questions/18369188/python-add-id3-tags-to-mp3-file-that-has- no-tags
+# https://methodmatters.github.io/editing-id3-tags-mp3-meta-data-in-python/
 
 
 engine = pyttsx3.init('sapi5')  # This would need to change for non-windows as sapi is win only
@@ -81,16 +85,16 @@ def speak(audio):
     engine.runAndWait()
 
 
-def savechunk(text: str, dest: str):
+def savechunk(text: str, dest: str, artist, album):
     engine.save_to_file(text, dest)  # Saving Text In a audio file default is 'story.mp3'
     engine.runAndWait()
-    set_tags(dest)
+    set_tags(dest, artist, album)
     return
 
 
-def save(text: str, dest='story.mp3', chunksize=20000):
+def save(text: str, dest='story.mp3',  artist='test', album='test', chunksize=20000):
     if len(text) <= chunksize:
-        savechunk(text, dest)
+        savechunk(text, dest, artist, album)
         return
     part = 1
     while len(text) > chunksize:
@@ -107,7 +111,7 @@ def save(text: str, dest='story.mp3', chunksize=20000):
     return
 
 
-def mp4_to_mp3(fil: str):
+def mp4_to_mp3(fil: str, artist: str, album: str):
     # function call mp4_to_mp3("my_mp4_path.mp4", "audio.mp3")
     destname = fil[:-3] + "mp3"
     mp3 = os.path.join(dest_folder, destname)
@@ -118,7 +122,7 @@ def mp4_to_mp3(fil: str):
     return True
 
 
-def readpdf(fil: str):
+def readpdf(fil: str, artist: str, album: str):
     destname = fil[:-3] + "mp3"
     dest = os.path.join(dest_folder, destname)
     source = os.path.join(source_folder, fil)
@@ -126,15 +130,15 @@ def readpdf(fil: str):
     for page_num in range(reader.numPages):
         text = reader.getPage(page_num).extractText()
         cleaned_text = text.strip().replace('\n', ' ')  # Removes unnecessary spaces and break lines
-        save(cleaned_text, dest)
+        save(cleaned_text, dest, artist, album )
     return True
 
 
-def remove_non_ascii(s: str) ->str:
-    return "".join(c for c in s if ord(c)<128)
+def remove_non_ascii(s: str) -> str:
+    return "".join(c for c in s if ord(c) < 128)
 
 
-def readtxt(fil: str) ->bool:
+def readtxt(fil: str, album: str, artist: str) -> bool:
     # This works OK with ansi text - now added remove non ascii to clean up
     destname = fil[:-3] + "mp3"
     dest = os.path.join(dest_folder, destname)
@@ -149,11 +153,11 @@ def readtxt(fil: str) ->bool:
                 cnt += 1
             line = fp.readline()
         storytext = ''.join(story)
-        save(storytext, dest)
+        save(storytext, dest, album, artist)
     return True
 
 
-def readurl(fil: str, filenam: str) ->bool:
+def readurl(fil: str, filenam: str, artist: str, album: str) -> bool:
     # These are assumed to be short so no file_splitting
     res = requests.get(fil)
     soup = BeautifulSoup(res.text, 'html.parser')
@@ -165,11 +169,11 @@ def readurl(fil: str, filenam: str) ->bool:
         article = soup.select('.p')[i].getText().strip()
         articles.append(article)
     text = " ".join(articles)
-    save(text, dest)
+    save(text, dest, album, artist)
     return False
 
 
-def word_to_mp3(fil: str) ->bool:
+def word_to_mp3(fil: str, artist: str, album: str) -> bool:
     source = os.path.join(source_folder, fil)
     destname = fil[:-4] + "mp3"
     dest = os.path.join(dest_folder, destname)
@@ -179,46 +183,50 @@ def word_to_mp3(fil: str) ->bool:
         print(block.text)
         articles.append(block.text)
     text = " ".join(articles)
-    save(text, dest)
+    save(text, dest, album, artist)
     return True
 
 
-def callbytype(ext, fil, filenam=None):
+def callbytype(ext, fil, filenam=None, artist='test_artist', album='test_album'):
     if ext == '.pdf':
-        result = readpdf(fil)
+        result = readpdf(fil, artist, album)
     elif ext == '.txt':
-        result = readtxt(fil)
+        result = readtxt(fil, artist, album)
     elif ext == '.url':
-        result = readurl(fil, filenam)
+        result = readurl(fil, filenam, artist, album)
     elif ext == '.mp4':
-        result = mp4_to_mp3(fil)
+        result = mp4_to_mp3(fil, artist, album)
     elif ext == '.docx':
-        result = word_to_mp3(fil)
+        result = word_to_mp3(fil, artist, album)
     else:
         print('Extension ' + ext + ' is not supported yet')
         result = False
     return result
 
 
-# TODO - possibly support friendly names in url layout I guess
-f = list_files(source_folder)
-for file in f:
-    extension = os.path.splitext(file)[1]
-    sourcelist = os.path.join(source_folder, file)
-    archivefile = os.path.join(archive_folder, file)
-    result = False
-    if extension == '.url':
-        with open(sourcelist) as fp:
-            line = fp.readline()
-            filecount = 0
-            while line:
-                filename = "url" + str(filecount)
-                result = callbytype('.url', line, filename)
+def process_folder(source_folder):
+    f = list_files(source_folder)
+    for file in f:
+        extension = os.path.splitext(file)[1]
+        sourcelist = os.path.join(source_folder, file)
+        archivefile = os.path.join(archive_folder, file)
+        result = False
+        if extension == '.url':
+            with open(sourcelist) as fp:
                 line = fp.readline()
-                filecount += 1
-    else:
-        result = callbytype(extension, file)
-    if result:
-        shutil.move(sourcelist, archivefile)
+                filecount = 0
+                while line:
+                    filename = "url" + str(filecount)
+                    result = callbytype('.url', line, filename)
+                    line = fp.readline()
+                    filecount += 1
+        else:
+            result = callbytype(extension, file)
+        if result:
+            shutil.move(sourcelist, archivefile)
 
-engine.stop()
+
+if __name__ == "__main__":
+    process_folder(source_folder)
+    process_folder(recordings_folder)
+    engine.stop()
