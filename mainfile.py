@@ -17,6 +17,7 @@ import PyPDF2
 from bs4 import BeautifulSoup
 import shutil
 from moviepy.editor import *
+import pickle
 
 import docx
 from docx.document import Document
@@ -26,14 +27,26 @@ from docx.table import _Cell, Table
 from docx.text.paragraph import Paragraph
 from m3_meta import set_tags
 
+# open a pickle file
+filename = 'pickdata.pk'
+
+# load your data back to memory when you need it
+try:
+    with open(filename, 'rb') as fil:
+        seq_counter = pickle.load(fil)
+except EOFError:
+    seq_counter = 1
+
+
+
 # SETUP DATA - amend for your use
 source_folder = r'c:\users\donal\Documents\ttsimport'  # where you put files to be converted
 dest_folder = r'c:\users\donal\Documents\ttsexport'  # where you create converted files
 archive_folder = r'c:\users\donal\Documents\ttsarchive'
 recordings_folder = r'c:\users\donal\Documents\Sound Recordings'
 
-artist='current book'
-album='my album'
+artist = 'Amazon'
+album = 'Work Backwards'
 
 # Not using these yet - lets see if we need to
 # lines_per_file=10  #number of lines in text or html file before creating new file
@@ -88,7 +101,7 @@ def speak(audio):
 def savechunk(text: str, dest: str, artist, album):
     engine.save_to_file(text, dest)  # Saving Text In a audio file default is 'story.mp3'
     engine.runAndWait()
-    set_tags(dest, artist, album)
+    set_tags('mp3', dest, artist, album)
     return
 
 
@@ -132,6 +145,17 @@ def readpdf(fil: str, artist: str, album: str):
         cleaned_text = text.strip().replace('\n', ' ')  # Removes unnecessary spaces and break lines
         save(cleaned_text, dest, artist, album )
     return True
+
+
+def mp3_copy(fil: str, sourcefolder, artist: str, album: str, ext):
+    global seq_counter
+    destname = fil[:-4] + 'pt'+ str(seq_counter) + ext
+    seq_counter += 1
+    dest = os.path.join(dest_folder, destname)
+    source = os.path.join(sourcefolder, fil)
+    shutil.copy(source, dest)
+    set_tags(ext[1:], dest, artist, album, destname)
+    return
 
 
 def remove_non_ascii(s: str) -> str:
@@ -187,7 +211,7 @@ def word_to_mp3(fil: str, artist: str, album: str) -> bool:
     return True
 
 
-def callbytype(ext, fil, filenam=None, artist='test_artist', album='test_album'):
+def callbytype(ext, fil, sourcefolder, filenam=None, artist='test_artist', album='test_album'):
     if ext == '.pdf':
         result = readpdf(fil, artist, album)
     elif ext == '.txt':
@@ -196,6 +220,8 @@ def callbytype(ext, fil, filenam=None, artist='test_artist', album='test_album')
         result = readurl(fil, filenam, artist, album)
     elif ext == '.mp4':
         result = mp4_to_mp3(fil, artist, album)
+    elif ext == '.mp3' or ext =='.m4a':
+        result = mp3_copy(fil, sourcefolder, artist, album, ext)
     elif ext == '.docx':
         result = word_to_mp3(fil, artist, album)
     else:
@@ -205,6 +231,7 @@ def callbytype(ext, fil, filenam=None, artist='test_artist', album='test_album')
 
 
 def process_folder(source_folder):
+    global seq_counter
     f = list_files(source_folder)
     for file in f:
         extension = os.path.splitext(file)[1]
@@ -217,11 +244,11 @@ def process_folder(source_folder):
                 filecount = 0
                 while line:
                     filename = "url" + str(filecount)
-                    result = callbytype('.url', line, filename)
+                    result = callbytype('.url', line, source_folder, filename)
                     line = fp.readline()
                     filecount += 1
         else:
-            result = callbytype(extension, file)
+            result = callbytype(extension, file, source_folder, file, artist, album)
         if result:
             shutil.move(sourcelist, archivefile)
 
@@ -230,3 +257,5 @@ if __name__ == "__main__":
     process_folder(source_folder)
     process_folder(recordings_folder)
     engine.stop()
+    with open(filename, 'wb') as fil:
+        pickle.dump(seq_counter, fil)
