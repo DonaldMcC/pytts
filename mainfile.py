@@ -41,12 +41,13 @@ except EOFError:
 
 # SETUP DATA - amend for your use
 source_folder = r'c:\users\donal\Documents\ttsimport'  # where you put files to be converted
-dest_folder = r'c:\users\donal\Documents\ttsexport'  # where you create converted files
+dest_folder = r"C:\Users\donal\iCloudDrive\tts"  # where you create converted files
 archive_folder = r'c:\users\donal\Documents\ttsarchive'
 recordings_folder = r'c:\users\donal\Documents\Sound Recordings'
 
-artist = 'Amazon'
-album = 'Work Backwards'
+
+artist = 'Atomic_habits'
+album = 'Atomic'
 
 # Not using these yet - lets see if we need to
 # lines_per_file=10  #number of lines in text or html file before creating new file
