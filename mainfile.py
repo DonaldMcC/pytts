@@ -46,8 +46,8 @@ archive_folder = r'c:\users\donal\Documents\ttsarchive'
 recordings_folder = r'c:\users\donal\Documents\Sound Recordings'
 
 
-artist = 'Atomic_habits'
-album = 'Atomic'
+artist = 'Burkman'
+album = 'FourK weeks'
 
 # Not using these yet - lets see if we need to
 # lines_per_file=10  #number of lines in text or html file before creating new file
@@ -156,7 +156,7 @@ def mp3_copy(fil: str, sourcefolder, artist: str, album: str, ext):
     source = os.path.join(sourcefolder, fil)
     shutil.copy(source, dest)
     set_tags(ext[1:], dest, artist, album, destname)
-    return
+    return True
 
 
 def remove_non_ascii(s: str) -> str:
