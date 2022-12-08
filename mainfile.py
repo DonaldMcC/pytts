@@ -38,16 +38,12 @@ except EOFError:
     seq_counter = 1
 
 
-
 # SETUP DATA - amend for your use
 source_folder = r'c:\users\donal\Documents\ttsimport'  # where you put files to be converted
 dest_folder = r"C:\Users\donal\iCloudDrive\tts"  # where you create converted files
 archive_folder = r'c:\users\donal\Documents\ttsarchive'
 recordings_folder = r'c:\users\donal\Documents\Sound Recordings'
 
-
-artist = 'Burkman'
-album = 'FourK weeks'
 
 # Not using these yet - lets see if we need to
 # lines_per_file=10  #number of lines in text or html file before creating new file
@@ -90,8 +86,7 @@ def iter_block_items(parent):
 def list_files(directory: str, ext=None):
     if ext:
         return (fil for fil in os.listdir(directory) if fil.endswith('.' + ext))
-    else:
-        return (fil for fil in os.listdir(directory))
+    return (fil for fil in os.listdir(directory))
 
 
 def speak(audio):
@@ -231,7 +226,7 @@ def callbytype(ext, fil, sourcefolder, filenam=None, artist='test_artist', album
     return result
 
 
-def process_folder(source_folder):
+def process_folder(source_folder, artist, album):
     global seq_counter
     f = list_files(source_folder)
     for file in f:
@@ -255,8 +250,12 @@ def process_folder(source_folder):
 
 
 if __name__ == "__main__":
-    process_folder(source_folder)
-    process_folder(recordings_folder)
+    artist = 'Ferris'
+    album = 'Tribe_Mentors'
+    newalbum = input('Change album currently' + album)
+    album = newalbum or album
+    process_folder(source_folder, artist, album)
+    process_folder(recordings_folder, artist, album)
     engine.stop()
     with open(filename, 'wb') as fil:
         pickle.dump(seq_counter, fil)
