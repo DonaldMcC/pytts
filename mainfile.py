@@ -11,6 +11,9 @@
 # will also need to get the speed correct and part of the options
 # mp4 to mp3 from https://stackoverflow.com/questions/55081352/how-to-convert-mp4-to-mp3-using-python
 
+# now mainly using this for Kindle read out loud files recorded as m4a via sound recordings and will then
+# cut out silences when they occasionally stop using pydub
+
 import pyttsx3
 import requests
 import PyPDF2
@@ -26,6 +29,10 @@ from docx.oxml.text.paragraph import CT_P
 from docx.table import _Cell, Table
 from docx.text.paragraph import Paragraph
 from m3_meta import set_tags
+from pydub import AudioSegment
+from pydub.silence import split_on_silence
+
+
 
 # open a pickle file
 filename = 'pickdata.pk'
@@ -40,7 +47,7 @@ except EOFError:
 
 # SETUP DATA - amend for your use
 source_folder = r'c:\users\donal\Documents\ttsimport'  # where you put files to be converted
-dest_folder = r"C:\Users\donal\iCloudDrive\tts"  # where you create converted files
+dest_folder = r"D:\ttsexport"  # where you create converted files
 archive_folder = r'c:\users\donal\Documents\ttsarchive'
 recordings_folder = r'c:\users\donal\Documents\Sound Recordings'
 
@@ -142,14 +149,45 @@ def readpdf(fil: str, artist: str, album: str):
         save(cleaned_text, dest, artist, album )
     return True
 
+def cut_silence(sourcefile, sourcename, destfile, format):
+    # Variables for the audio file
+    # You need to download this file from here: https://etc.usf.edu/lit2go/1/alices-adventures-in-wonderland/1/chapter-i-down-the-rabbit-hole/
+    file_path = "./audio/alices-adventures-in-wonderland-001-chapter-i-down-the-rabbit-hole.1.mp3"
+    file_path = sourcefile
+    file_name = file_path.split('/')[-1]
+    file_name = sourcename
+    audio_format = "mp3"
+    audio_format = format
 
-def mp3_copy(fil: str, sourcefolder, artist: str, album: str, ext):
+    print(file_path)
+
+    # Reading and splitting the audio file into chunks
+    sound = AudioSegment.from_file(file_path, format=audio_format)
+    audio_chunks = split_on_silence(sound
+                                    , min_silence_len=2000
+                                    , silence_thresh=-55
+                                    , keep_silence=50
+                                    )
+
+    # Putting the file back together
+    combined = AudioSegment.empty()
+    for chunk in audio_chunks:
+        combined += chunk
+    if audio_format == 'm4a':
+        audio_format = 'ipod'
+    combined.export(destfile, format=audio_format)
+
+
+def mp3_copy(fil: str, sourcefolder, artist: str, album: str, ext, cutout_silence=True):
     global seq_counter
     destname = fil[:-4] + 'pt'+ str(seq_counter) + ext
     seq_counter += 1
     dest = os.path.join(dest_folder, destname)
     source = os.path.join(sourcefolder, fil)
-    shutil.copy(source, dest)
+    if cutout_silence:
+        cut_silence(source, fil, dest, ext[1:])
+    else:
+        shutil.copy(source, dest)
     set_tags(ext[1:], dest, artist, album, destname)
     return True
 
@@ -250,11 +288,11 @@ def process_folder(source_folder, artist, album):
 
 
 if __name__ == "__main__":
-    artist = 'Ferris'
-    album = 'Tribe_Mentors'
-    newalbum = input('Change album currently' + album)
-    album = newalbum or album
-    process_folder(source_folder, artist, album)
+    artist = 'Test'
+    album = 'Human Frontiers'
+    #newalbum = input('Change album currently' + album)
+    #album = newalbum or album
+    #process_folder(source_folder, artist, album)
     process_folder(recordings_folder, artist, album)
     engine.stop()
     with open(filename, 'wb') as fil:
