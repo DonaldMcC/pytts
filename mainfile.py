@@ -31,7 +31,7 @@ from docx.text.paragraph import Paragraph
 from m3_meta import set_tags
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
-
+import os
 
 
 # open a pickle file
@@ -184,10 +184,10 @@ def mp3_copy(fil: str, sourcefolder, artist: str, album: str, ext, cutout_silenc
     #changing below as sound recording meaningless
     #destname = fil[:-4] + 'pt'+ str(seq_counter) + ext
     destname = f'{album}_pt_{seq_counter}{ext}'
-    seq_counter += 1
     dest = os.path.join(dest_folder, destname)
     source = os.path.join(sourcefolder, fil)
     album = f'{album}_pt_{seq_counter}'
+    seq_counter += 1
     if cutout_silence:
         cut_silence(source, fil, dest, ext[1:])
     else:
@@ -271,6 +271,7 @@ def callbytype(ext, fil, sourcefolder, filenam=None, artist='test_artist', album
 def process_folder(source_folder, artist, album):
     global seq_counter
     f = list_files(source_folder)
+    f.sort(key=os.path.getmtime)
     for file in f:
         extension = os.path.splitext(file)[1]
         sourcelist = os.path.join(source_folder, file)
@@ -292,8 +293,8 @@ def process_folder(source_folder, artist, album):
 
 
 if __name__ == "__main__":
-    artist = 'Mustafa Suleyman'
-    album = 'The Coming Wave'
+    artist = 'Patrik Ian Meyer'
+    album = 'Critical Thinking'
     #newalbum = input('Change album currently' + album)
     #album = newalbum or album
     #process_folder(source_folder, artist, album)
