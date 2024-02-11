@@ -92,9 +92,14 @@ def iter_block_items(parent):
 
 # we will look to process all files in import directory
 def list_files(directory: str, ext=None):
+    search_dir = directory
+    os.chdir(search_dir)
+    # files = os.listdir(search_dir)
+    files = filter(os.path.isfile, os.listdir(search_dir))
+    sorted_files = sorted(files, key= lambda x : os.path.getmtime(os.path.join(search_dir,x)))
     if ext:
-        return (fil for fil in os.listdir(directory) if fil.endswith('.' + ext))
-    return (fil for fil in os.listdir(directory))
+        return (fil for fil in sorted_files if fil.endswith('.' + ext))
+    return (fil for fil in sorted_files)
 
 
 def speak(audio):
@@ -271,7 +276,6 @@ def callbytype(ext, fil, sourcefolder, filenam=None, artist='test_artist', album
 def process_folder(source_folder, artist, album):
     global seq_counter
     f = list_files(source_folder)
-    f.sort(key=os.path.getmtime)
     for file in f:
         extension = os.path.splitext(file)[1]
         sourcelist = os.path.join(source_folder, file)
@@ -293,8 +297,8 @@ def process_folder(source_folder, artist, album):
 
 
 if __name__ == "__main__":
-    artist = 'Patrik Ian Meyer'
-    album = 'Critical Thinking'
+    artist = 'Lucas Calafati'
+    album = 'Nothing Works'
     #newalbum = input('Change album currently' + album)
     #album = newalbum or album
     #process_folder(source_folder, artist, album)
