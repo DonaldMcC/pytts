@@ -96,9 +96,9 @@ def list_files(directory: str, ext=None):
     os.chdir(search_dir)
     # files = os.listdir(search_dir)
     files = filter(os.path.isfile, os.listdir(search_dir))
-    sorted_files = sorted(files, key= lambda x : os.path.getmtime(os.path.join(search_dir,x)))
+    sorted_files = sorted(files, key=lambda x: os.path.getmtime(os.path.join(search_dir, x)))
     if ext:
-        return (fil for fil in sorted_files if fil.endswith('.' + ext))
+        return (fil for fil in sorted_files if fil.endswith('.'+ext))
     return (fil for fil in sorted_files)
 
 
@@ -297,8 +297,8 @@ def process_folder(source_folder, artist, album):
 
 
 if __name__ == "__main__":
-    artist = 'Lucas Calafati'
-    album = 'Nothing Works'
+    artist = ('Matt Ridley')
+    album = 'Evolution of Everything'
     #newalbum = input('Change album currently' + album)
     #album = newalbum or album
     #process_folder(source_folder, artist, album)
