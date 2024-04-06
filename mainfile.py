@@ -48,7 +48,7 @@ except EOFError:
 # SETUP DATA - amend for your use
 source_folder = r'c:\users\donal\Documents\ttsimport'  # where you put files to be converted
 # dest_folder = r"D:\ttsexport"  # where you create converted files
-dest_folder = r"C:\Users\donal\iCloudDrive\tts"
+dest_folder = r"C:\Users\donal\iCloudDrive\a_tts"
 archive_folder = r'c:\users\donal\Documents\ttsarchive'
 recordings_folder = r'c:\users\donal\Documents\Sound Recordings'
 
