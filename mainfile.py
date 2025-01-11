@@ -19,7 +19,7 @@ import requests
 import PyPDF2
 from bs4 import BeautifulSoup
 import shutil
-from moviepy.editor import *
+#from moviepy.editor import *
 import pickle
 
 import docx
@@ -33,14 +33,16 @@ from pydub import AudioSegment
 from pydub.silence import split_on_silence
 import os
 
-
+start_folder = os.getcwd()
 # open a pickle file
+print(f'Start folder {start_folder}')
 filename = 'pickdata.pk'
 
 # load your data back to memory when you need it
 try:
     with open(filename, 'rb') as fil:
         seq_counter = pickle.load(fil)
+        print(seq_counter)
 except EOFError:
     seq_counter = 1
 
@@ -48,7 +50,7 @@ except EOFError:
 # SETUP DATA - amend for your use
 source_folder = r'c:\users\donal\Documents\ttsimport'  # where you put files to be converted
 # dest_folder = r"D:\ttsexport"  # where you create converted files
-dest_folder = r"C:\Users\donal\iCloudDrive\a_tts"
+dest_folder = r"C:\Users\donal\new_icloud\iCloudDrive\a_tts"
 archive_folder = r'c:\users\donal\Documents\ttsarchive'
 recordings_folder = r'c:\users\donal\Documents\Sound Recordings'
 
@@ -188,11 +190,12 @@ def mp3_copy(fil: str, sourcefolder, artist: str, album: str, ext, cutout_silenc
     global seq_counter
     #changing below as sound recording meaningless
     #destname = fil[:-4] + 'pt'+ str(seq_counter) + ext
+    seq_counter += 1
     destname = f'{album}_pt_{seq_counter}{ext}'
     dest = os.path.join(dest_folder, destname)
     source = os.path.join(sourcefolder, fil)
     album = f'{album}_pt_{seq_counter}'
-    seq_counter += 1
+    print(album)
     if cutout_silence:
         cut_silence(source, fil, dest, ext[1:])
     else:
@@ -297,12 +300,15 @@ def process_folder(source_folder, artist, album):
 
 
 if __name__ == "__main__":
-    artist = ('Matt Ridley')
-    album = 'Evolution of Everything'
+    artist = ('Robert Axelrod')
+    album = 'Evolution of Cooperation'
     #newalbum = input('Change album currently' + album)
     #album = newalbum or album
-    #process_folder(source_folder, artist, album)
     process_folder(recordings_folder, artist, album)
     engine.stop()
+    os.chdir(start_folder)
+    print(filename)
     with open(filename, 'wb') as fil:
+        print(filename)
+        print(seq_counter)
         pickle.dump(seq_counter, fil)
