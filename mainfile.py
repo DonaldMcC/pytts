@@ -14,7 +14,8 @@
 # now mainly using this for Kindle read out loud files recorded as m4a via sound recordings and will then
 # cut out silences when they occasionally stop using pydub
 
-import pyttsx3
+import pyttsx4
+import win32com.client
 import requests
 import PyPDF2
 from bs4 import BeautifulSoup
@@ -32,6 +33,10 @@ from m3_meta import set_tags
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
 import os
+
+#Added below as struggling to get pyttsx3 or pyttsx4 to operate with py3.13 - setup still
+#works with py3.11 but not actually using the text to speech much currently
+tts=False
 
 start_folder = os.getcwd()
 # open a pickle file
@@ -63,12 +68,12 @@ recordings_folder = r'c:\users\donal\Documents\Sound Recordings'
 # https://stackoverflow.com/questions/18369188/python-add-id3-tags-to-mp3-file-that-has- no-tags
 # https://methodmatters.github.io/editing-id3-tags-mp3-meta-data-in-python/
 
-
-engine = pyttsx3.init('sapi5')  # This would need to change for non-windows as sapi is win only
-voices = engine.getProperty('voices')
-newVoiceRate = 200  # average speech is 150 wpm but I prefer a little faster
-engine.setProperty('rate', newVoiceRate)
-engine.setProperty('voice', voices[1].id)
+if tts:
+    engine = pyttsx4.init('sapi5')  # This would need to change for non-windows as sapi is win only
+    voices = engine.getProperty('voices')
+    newVoiceRate = 200  # average speech is 150 wpm but I prefer a little faster
+    engine.setProperty('rate', newVoiceRate)
+    engine.setProperty('voice', voices[1].id)
 
 
 def iter_block_items(parent):
@@ -300,12 +305,13 @@ def process_folder(source_folder, artist, album):
 
 
 if __name__ == "__main__":
-    artist = ('Robert Axelrod')
-    album = 'Evolution of Cooperation'
+    artist = ('Dominik Horndlein')
+    album = 'Making Sense of Generative AI'
     #newalbum = input('Change album currently' + album)
     #album = newalbum or album
     process_folder(recordings_folder, artist, album)
-    engine.stop()
+    if tts:
+        engine.stop()
     os.chdir(start_folder)
     print(filename)
     with open(filename, 'wb') as fil:
