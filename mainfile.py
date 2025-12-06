@@ -13,15 +13,18 @@
 
 # now mainly using this for Kindle read out loud files recorded as m4a via sound recordings and will then
 # cut out silences when they occasionally stop using pydub
+# m4a files are now being saved as m4b to see if they then work with apple books - not actually changed
+# anything else about these just the extension for now
 
 import pyttsx4
-import win32com.client
+import tempfile
 import requests
 import PyPDF2
 from bs4 import BeautifulSoup
 import shutil
 #from moviepy.editor import *
 import pickle
+import subprocess
 
 import docx
 from docx.document import Document
@@ -196,17 +199,37 @@ def mp3_copy(fil: str, sourcefolder, artist: str, album: str, ext, cutout_silenc
     #changing below as sound recording meaningless
     #destname = fil[:-4] + 'pt'+ str(seq_counter) + ext
     seq_counter += 1
+    a_to_b = False if ext == '.m4a' else False
     destname = f'{album}_pt_{seq_counter}{ext}'
     dest = os.path.join(dest_folder, destname)
     source = os.path.join(sourcefolder, fil)
-    album = f'{album}_pt_{seq_counter}'
-    print(album)
-    if cutout_silence:
-        cut_silence(source, fil, dest, ext[1:])
-    else:
-        shutil.copy(source, dest)
-    set_tags(ext[1:], dest, artist, album, destname)
-    return True
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        mytmpfil = os.path.join(tmpdirname, destname)
+        print(mytmpfil)
+        print(dest)
+        album = f'{album}_pt_{seq_counter}'
+        print(album)
+        if cutout_silence:
+            if a_to_b:
+                cut_silence(source, fil, mytmpfil, ext[1:])
+                dest = dest[:-1]+'b'  # convert m4a to m4b
+                cmd = [
+                    "ffmpeg",
+                    "-hide_banner",
+                    "-loglevel", "error",
+                    "-y",  # Overwrite output
+                    "-i", mytmpfil,  # Input m4a
+                    "-vn",  # This drops any video/art track that might be embedded as H.264:
+                    "-c:a", "aac",
+                    dest
+                ]
+                subprocess.run(cmd, check=True)
+            else:
+                cut_silence(source, fil, dest, ext[1:])
+        else:
+            shutil.copy(source, dest)
+        set_tags(ext[1:], dest, artist, album, destname)
+        return True
 
 
 def remove_non_ascii(s: str) -> str:
@@ -301,8 +324,8 @@ def process_folder(source_folder, artist, album):
         else:
             result = callbytype(extension, file, source_folder, file, artist, album)
         if result:
-            shutil.move(sourcelist, archivefile)
-
+            #shutil.move(sourcelist, archivefile)
+            pass
 
 if __name__ == "__main__":
     artist = ('Dominik Horndlein')
