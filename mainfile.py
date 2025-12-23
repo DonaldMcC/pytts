@@ -199,7 +199,7 @@ def mp3_copy(fil: str, sourcefolder, artist: str, album: str, ext, cutout_silenc
     #changing below as sound recording meaningless
     #destname = fil[:-4] + 'pt'+ str(seq_counter) + ext
     seq_counter += 1
-    a_to_b = False if ext == '.m4a' else False
+    a_to_b = True if ext == '.m4a' else False
     destname = f'{album}_pt_{seq_counter}{ext}'
     dest = os.path.join(dest_folder, destname)
     source = os.path.join(sourcefolder, fil)
