@@ -9,6 +9,7 @@ from mutagen.mp4 import MP4
 
 
 def set_tags(filetype, filepath, artist='test artist', album='Test Album', title='Test Song'):
+    print(filepath)
     if filetype == 'mp3':
         set_tags_mp3(filepath, artist=artist, album=album, title=title)
     elif filetype in ('mp4', 'm4a','m4b'):

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # https://medium.com/pythoneers/10-handy-automation-scripts-you-should-try-using-python-fc9450116938
 # this will now handle 3 things
-# txt files in the import folder
-# pdf files in the import folder
-# a text file consisting of urls provided it has an extension of .url
+#    1) txt files in the import folder
+#    2) pdf files in the import folder
+#    3) text file consisting of urls provided it has an extension of .url
 # there should now be no actual input the program just runs
 # word documents probably worth looking at as a format too
 # output probably we do want some chunking options in the filename and generally we take the input name as basis
@@ -11,7 +11,7 @@
 # will also need to get the speed correct and part of the options
 # mp4 to mp3 from https://stackoverflow.com/questions/55081352/how-to-convert-mp4-to-mp3-using-python
 
-# now mainly using this for Kindle read out loud files recorded as m4a via sound recordings and will then
+# now mainly using this for audio files recorded as m4a via sound recordings and will then
 # cut out silences when they occasionally stop using pydub
 # m4a files are now being saved as m4b to see if they then work with apple books - not actually changed
 # anything else about these just the extension for now
@@ -57,6 +57,8 @@ except EOFError:
 
 # SETUP DATA - amend for your use
 source_folder = r'c:\users\donal\Documents\ttsimport'  # where you put files to be converted
+wav_folder = r'c:\users\donal\Documents\wavtemp'  # where you put files to be converted
+mp3_temp = r'c:\users\donal\Documents\mp3temp'
 # dest_folder = r"D:\ttsexport"  # where you create converted files
 dest_folder = r"C:\Users\donal\new_icloud\iCloudDrive\a_tts"
 archive_folder = r'c:\users\donal\Documents\ttsarchive'
@@ -154,10 +156,21 @@ def mp4_to_mp3(fil: str, artist: str, album: str):
     return True
 
 
-def readpdf(fil: str, artist: str, album: str):
+def wav_to_mp3(fil: str, artist: str, album: str, sourcefold: str, destfold:str):
+    # function call mp4_to_mp3("my_mp4_path.mp4", "audio.mp3")
+    destname = fil[:-3] + "mp3"
+    mp3 = os.path.join(destfold, destname)
+    wav = os.path.join(sourcefold, fil)
+    AudioSegment.converter = "ffmpeg"
+    audio = AudioSegment.from_wav(wav)
+    audio.export(mp3, format="mp3")
+    return True
+
+
+def readpdf(fil: str, artist: str, album:str, sourcefold=source_folder):
     destname = fil[:-3] + "mp3"
     dest = os.path.join(dest_folder, destname)
-    source = os.path.join(source_folder, fil)
+    source = os.path.join(sourcefold, fil)
     reader = PyPDF2.PdfFileReader(open(source, 'rb'))
     for page_num in range(reader.numPages):
         text = reader.getPage(page_num).extractText()
@@ -165,7 +178,7 @@ def readpdf(fil: str, artist: str, album: str):
         save(cleaned_text, dest, artist, album )
     return True
 
-def cut_silence(sourcefile, sourcename, destfile, format):
+def cut_silence(sourcefile, sourcename, destfile, format, sourcefold=source_folder):
     # Variables for the audio file
     # You need to download this file from here: https://etc.usf.edu/lit2go/1/alices-adventures-in-wonderland/1/chapter-i-down-the-rabbit-hole/
     file_path = "./audio/alices-adventures-in-wonderland-001-chapter-i-down-the-rabbit-hole.1.mp3"
@@ -194,7 +207,7 @@ def cut_silence(sourcefile, sourcename, destfile, format):
     combined.export(destfile, format=audio_format)
 
 
-def mp3_copy(fil: str, sourcefolder, artist: str, album: str, ext, cutout_silence=True):
+def mp3_copy(fil: str, sourcefold, artist: str, album: str, ext, cutout_silence=True):
     global seq_counter
     #changing below as sound recording meaningless
     #destname = fil[:-4] + 'pt'+ str(seq_counter) + ext
@@ -202,7 +215,7 @@ def mp3_copy(fil: str, sourcefolder, artist: str, album: str, ext, cutout_silenc
     a_to_b = True if ext == '.m4a' else False
     destname = f'{album}_pt_{seq_counter}{ext}'
     dest = os.path.join(dest_folder, destname)
-    source = os.path.join(sourcefolder, fil)
+    source = os.path.join(sourcefold, fil)
     with tempfile.TemporaryDirectory() as tmpdirname:
         mytmpfil = os.path.join(tmpdirname, destname)
         print(mytmpfil)
@@ -212,7 +225,7 @@ def mp3_copy(fil: str, sourcefolder, artist: str, album: str, ext, cutout_silenc
         if cutout_silence:
             if a_to_b:
                 cut_silence(source, fil, mytmpfil, ext[1:])
-                dest = dest[:-1]+'b'  # convert m4a to m4b
+                dest = dest[:-3]+'m4b'  # convert m4a to m4b and mp3 to m4b
                 cmd = [
                     "ffmpeg",
                     "-hide_banner",
@@ -285,22 +298,30 @@ def word_to_mp3(fil: str, artist: str, album: str) -> bool:
     return True
 
 
-def callbytype(ext, fil, sourcefolder, filenam=None, artist='test_artist', album='test_album'):
-    if ext == '.pdf':
-        result = readpdf(fil, artist, album)
-    elif ext == '.txt':
-        result = readtxt(fil, artist, album)
-    elif ext == '.url':
-        result = readurl(fil, filenam, artist, album)
-    elif ext == '.mp4':
-        result = mp4_to_mp3(fil, artist, album)
-    elif ext == '.mp3' or ext =='.m4a':
-        result = mp3_copy(fil, sourcefolder, artist, album, ext)
-    elif ext == '.docx':
-        result = word_to_mp3(fil, artist, album)
-    else:
-        print('Extension ' + ext + ' is not supported yet')
-        result = False
+def callbytype(ext, fil, sourcefolder, filenam=None, artist='test_artist', album='test_album', dest_folder=mp3_temp):
+    match ext:
+        case '.pdf':
+            result = readpdf(fil, artist, album)
+        case '.txt':
+            result = readtxt(fil, artist, album)
+        case '.url':
+            result = readurl(fil, filenam, artist, album)
+        case '.mp4':
+            result = mp4_to_mp3(fil, artist, album)
+        case '.mp3':
+            result = mp3_copy(fil, sourcefolder, artist, album, ext)
+        case '.m4a':
+            result = mp3_copy(fil, sourcefolder, artist, album, ext)
+        case '.docx':
+            result = word_to_mp3(fil, artist, album)
+        case '.wav':
+            result = wav_to_mp3(fil, artist, album, sourcefolder, dest_folder)
+            # uses destfolder as source for next copy
+            sourcename = fil[:-3] + 'mp3'
+            result = mp3_copy(sourcename, dest_folder, artist, album, '.mp3')
+        case _:
+            print('Extension ' + ext + ' is not supported yet')
+            result = False
     return result
 
 
@@ -328,11 +349,12 @@ def process_folder(source_folder, artist, album):
             pass
 
 if __name__ == "__main__":
-    artist = ('Dominik Horndlein')
-    album = 'Making Sense of Generative AI'
+    artist = ('Michael Connelly')
+    album = 'Nightshade'
     #newalbum = input('Change album currently' + album)
     #album = newalbum or album
     process_folder(recordings_folder, artist, album)
+    process_folder(wav_folder, artist, album)
     if tts:
         engine.stop()
     os.chdir(start_folder)
