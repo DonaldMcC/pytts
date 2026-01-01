@@ -16,7 +16,7 @@
 # m4a files are now being saved as m4b to see if they then work with apple books - not actually changed
 # anything else about these just the extension for now
 
-import pyttsx4
+
 import tempfile
 import requests
 import PyPDF2
@@ -36,9 +36,11 @@ from m3_meta import set_tags
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
 import os
+import pyttsx3
 
 #Added below as struggling to get pyttsx3 or pyttsx4 to operate with py3.13 - setup still
-#works with py3.11 but not actually using the text to speech much currently
+#works with py3.11 but not actually using the text to speech much currently - also failed to install
+#pyaudio on py3.14 so not tried using that - neither immediate priority so leaving this for now
 tts=False
 
 start_folder = os.getcwd()
@@ -74,7 +76,7 @@ recordings_folder = r'c:\users\donal\Documents\Sound Recordings'
 # https://methodmatters.github.io/editing-id3-tags-mp3-meta-data-in-python/
 
 if tts:
-    engine = pyttsx4.init('sapi5')  # This would need to change for non-windows as sapi is win only
+    engine = pyttsx3.init()  # This would need to change for non-windows as sapi is win only
     voices = engine.getProperty('voices')
     newVoiceRate = 200  # average speech is 150 wpm but I prefer a little faster
     engine.setProperty('rate', newVoiceRate)
