@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # https://medium.com/pythoneers/10-handy-automation-scripts-you-should-try-using-python-fc9450116938
-# this will now handle 3 things
+# this should handle the following things
 #    1) txt files in the import folder
 #    2) pdf files in the import folder
 #    3) text file consisting of urls provided it has an extension of .url
-# there should now be no actual input the program just runs
-# word documents probably worth looking at as a format too
+#    4) mp3 files in the sound recordings folder
+#    5) wav files in the wavtemp filder - which can be acquired using the listen_speak2 file
+# there should be no actual input the program just runs and processes the files
+# the title and author are updated in the module at the bottom
 # output probably we do want some chunking options in the filename and generally we take the input name as basis
-# for the ouput I think
-# will also need to get the speed correct and part of the options
 # mp4 to mp3 from https://stackoverflow.com/questions/55081352/how-to-convert-mp4-to-mp3-using-python
 
 # now mainly using this for audio files recorded as m4a via sound recordings and will then
@@ -42,7 +42,7 @@ import os
 tts=False
 
 start_folder = os.getcwd()
-# open a pickle file
+# open  pickle file that stores the document counter
 print(f'Start folder {start_folder}')
 filename = 'pickdata.pk'
 
@@ -57,7 +57,7 @@ except EOFError:
 
 # SETUP DATA - amend for your use
 source_folder = r'c:\users\donal\Documents\ttsimport'  # where you put files to be converted
-wav_folder = r'c:\users\donal\Documents\wavtemp'  # where you put files to be converted
+wav_folder = r'c:\users\donal\Documents\wavtemp'  # where you put files to be converted - listen_speak 2 records here
 mp3_temp = r'c:\users\donal\Documents\mp3temp'
 # dest_folder = r"D:\ttsexport"  # where you create converted files
 dest_folder = r"C:\Users\donal\new_icloud\iCloudDrive\a_tts"
@@ -68,7 +68,7 @@ recordings_folder = r'c:\users\donal\Documents\Sound Recordings'
 # Not using these yet - lets see if we need to
 # lines_per_file=10  #number of lines in text or html file before creating new file
 # pages_per_file=1  #number of pages in pdf file before creating new file
-# so think we use mutagen to set album and artst - but need some rules for this
+# so think we use mutagen to set album and artist - but need some rules for this
 
 # https://stackoverflow.com/questions/18369188/python-add-id3-tags-to-mp3-file-that-has- no-tags
 # https://methodmatters.github.io/editing-id3-tags-mp3-meta-data-in-python/
@@ -345,12 +345,12 @@ def process_folder(source_folder, artist, album):
         else:
             result = callbytype(extension, file, source_folder, file, artist, album)
         if result:
-            #shutil.move(sourcelist, archivefile)
+            shutil.move(sourcelist, archivefile)
             pass
 
 if __name__ == "__main__":
-    artist = ('Michael Connelly')
-    album = 'Nightshade'
+    artist = ('Zach Grosfell')
+    album = 'Just Tell Them'
     #newalbum = input('Change album currently' + album)
     #album = newalbum or album
     process_folder(recordings_folder, artist, album)
